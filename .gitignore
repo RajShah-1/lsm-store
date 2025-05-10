@@ -1,1 +1,17 @@
+# Ignore data folder
 data
+
+# IDE configs
+.idea
+.vscode
+
+# Cpp build files
+CMakeFiles
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+bin
+.cmake
+Testing
+
+src/*.a
