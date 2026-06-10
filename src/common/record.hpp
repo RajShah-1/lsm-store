@@ -1,18 +1,15 @@
 #pragma once
 
 #include <iostream>
+#include <stdexcept>
 #include <string>
+#include <string_view>
+#include <utility>
 
 namespace kvstore {
 
 class Record {
  public:
-  Record(const std::string& key, const std::string& value)
-      : key_(key), value_(value) {}
-
-  Record(std::string&& key, std::string&& value)
-      : key_(std::move(key)), value_(std::move(value)) {}
-
   Record(std::string_view key, std::string_view value)
       : key_(key), value_(value) {}
 

@@ -1,14 +1,10 @@
 #pragma once
 
-#include <atomic>
+#include <filesystem>
 #include <fstream>
-#include <map>
 #include <memory>
-#include <mutex>
 #include <optional>
 #include <string>
-#include <thread>
-#include <unordered_map>
 
 #include "../common/record.hpp"
 #include "../config.hpp"
@@ -16,27 +12,18 @@
 namespace kvstore {
 
 /**
- * Write-Ahead Log (WAL) implementation.
- * Note: This class is NOT thread-safe.
- * TODO: Implement rotation and cleanup of old WAL files when we save SSTs.
+ * Write-Ahead Log (WAL) implementation. LSMKVStore owns synchronization.
  */
 class WriteAheadLogger {
  public:
   WriteAheadLogger() {
     auto& config = KVConfig::Instance();
-    const auto wal_dir = config.GetDataDir() + "/wal";
+    const auto wal_dir = config.GetWalDir();
 
-    if (!std::filesystem::exists(wal_dir)) {
-      std::filesystem::create_directories(wal_dir);
-    }
+    std::filesystem::create_directories(wal_dir);
 
-    path_ = wal_dir + "/wal.log";
-
-    wal_ =
-        std::make_unique<std::ofstream>(path_, std::ios::app | std::ios::out);
-    if (!wal_->is_open()) {
-      throw std::runtime_error("Failed to open WAL file");
-    }
+    path_ = (std::filesystem::path(wal_dir) / "wal.log").string();
+    OpenAppend();
   }
 
   ~WriteAheadLogger() {
@@ -60,7 +47,18 @@ class WriteAheadLogger {
     }
   }
 
+  void Reset() {
+    Close();
+    std::ofstream truncated(path_, std::ios::trunc);
+    if (!truncated.is_open()) {
+      throw std::runtime_error("Failed to truncate WAL file");
+    }
+    truncated.close();
+    OpenAppend();
+  }
+
   void StartReader() {
+    Flush();
     if (wal_reader_ && wal_reader_->is_open()) {
       wal_reader_->close();
     }
@@ -90,12 +88,23 @@ class WriteAheadLogger {
 
     std::string line;
     if (std::getline(*wal_reader_, line)) {
+      if (line.empty()) {
+        return std::nullopt;
+      }
       return Record::FromString(line);
     }
     return std::nullopt;
   }
 
  private:
+  void OpenAppend() {
+    wal_ =
+        std::make_unique<std::ofstream>(path_, std::ios::app | std::ios::out);
+    if (!wal_->is_open()) {
+      throw std::runtime_error("Failed to open WAL file");
+    }
+  }
+
   std::string path_;
   std::unique_ptr<std::ofstream> wal_;
   std::unique_ptr<std::ifstream> wal_reader_;

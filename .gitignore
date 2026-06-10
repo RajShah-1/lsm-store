@@ -1,17 +1,42 @@
-# Ignore data folder
-data
+# macOS
+.DS_Store
 
-# IDE configs
-.idea
-.vscode
+# Editors and IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
 
-# Cpp build files
-CMakeFiles
+# Runtime data
+data/
+
+# CMake build outputs
+build/
+cmake-build-*/
+CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
 Makefile
-bin
-.cmake
-Testing
+Testing/
+CTestTestfile.cmake
+install_manifest.txt
+compile_commands.json
+.cmake/
+*.gcda
+*.gcno
+*.gcov
 
-src/*.a
+# Binaries and libraries
+bin/
+*.a
+*.dylib
+*.so
+*.dll
+*.exe
+*.o
+*.o.d
+*.obj
+
+# Local scratch files
+code-dump.txt
+pbcopy

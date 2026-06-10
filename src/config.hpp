@@ -1,6 +1,8 @@
 #pragma once
 #include <atomic>
+#include <filesystem>
 #include <mutex>
+#include <stdexcept>
 #include <string>
 
 namespace kvstore {
@@ -11,12 +13,12 @@ class KVConfig {
     return instance;
   }
 
-  void SetDataDir(const std::string &dir) { 
+  void SetDataDir(const std::string &dir) {
     std::lock_guard<std::mutex> lock(mutex_);
-    data_dir_ = dir; 
+    data_dir_ = dir;
   }
 
-  std::string GetDataDir() {
+  std::string GetDataDir() const {
     std::lock_guard<std::mutex> lock(mutex_);
     if (data_dir_.empty()) {
       throw std::runtime_error("Data directory not set");
@@ -25,7 +27,14 @@ class KVConfig {
     return data_dir_;
   }
 
+  std::string GetWalDir() const { return (std::filesystem::path(GetDataDir()) / "wal").string(); }
+
+  std::string GetSSTableDir() const { return (std::filesystem::path(GetDataDir()) / "sst").string(); }
+
   void SetLSMFlushThreshold(size_t threshold) {
+    if (threshold == 0) {
+      throw std::invalid_argument("Flush threshold must be greater than zero");
+    }
     lsm_flush_threshold_.store(threshold);
   }
 
@@ -38,6 +47,9 @@ class KVConfig {
   }
 
   void SetIndexFrequency(size_t frequency) {
+    if (frequency == 0) {
+      throw std::invalid_argument("Index frequency must be greater than zero");
+    }
     index_frequency_.store(frequency);
   }
 
@@ -50,12 +62,12 @@ class KVConfig {
   }
 
  private:
-  KVConfig() : data_dir_(""), lsm_flush_threshold_(0) {}
+  KVConfig() : data_dir_(""), lsm_flush_threshold_(128), index_frequency_(4) {}
   ~KVConfig() = default;
 
   std::string data_dir_;
   std::atomic<size_t> lsm_flush_threshold_;
   std::atomic<size_t> index_frequency_;
-  std::mutex mutex_;
+  mutable std::mutex mutex_;
 };
 }  // namespace kvstore
