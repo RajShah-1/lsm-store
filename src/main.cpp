@@ -1,12 +1,15 @@
 #include <iostream>
 #include <string>
 #include <sstream>
-#include "store.hpp"
+#include "lsm/lsmstore.hpp"
 
-using namespace geokv;
+using namespace kvstore;
 
 int main() {
-    LSMKVStore store("data", 5);
+    KVConfig::Instance().SetDataDir("./data");
+    KVConfig::Instance().SetLSMFlushThreshold(5);
+
+    LSMKVStore store;
     std::string line;
 
     std::cout << "GeoKV CLI - type 'set <key> <val>', 'get <key>', 'flush', 'exit'\n";
@@ -26,11 +29,11 @@ int main() {
         }
         if (cmd == "set") {
             iss >> key >> val;
-            store.Set(key, val);
+            store.Set(Record(key, val));
         } else if (cmd == "get") {
             iss >> key;
             auto result = store.Get(key);
-            if (result) std::cout << key << " = " << *result << "\n";
+            if (result) std::cout << key << ": {" << *result << "}\n";
             else std::cout << "Key not found\n";
         }
     }
