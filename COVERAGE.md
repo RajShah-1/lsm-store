@@ -38,10 +38,9 @@ Covered behavior:
 
 ```sh
 cmake -S . -B cmake-build-coverage -DGEOKV_ENABLE_COVERAGE=ON
-cmake --build cmake-build-coverage
-ctest --test-dir cmake-build-coverage --output-on-failure
-gcov cmake-build-coverage/tests/CMakeFiles/geokv_tests.dir/test_geokv.cpp.gcda
+cmake --build cmake-build-coverage --target coverage
 ```
 
 The raw `gcov` output includes C++ standard library and GoogleTest internals.
 The summary above filters that output to project files only.
+Generated `.gcov` files are written to `cmake-build-coverage/coverage`.
