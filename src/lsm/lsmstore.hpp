@@ -6,6 +6,7 @@
 #include <map>
 #include <mutex>
 #include <optional>
+#include <ranges>
 #include <string>
 #include <vector>
 
@@ -34,7 +35,7 @@ class LSMKVStore : public IKVStore {
     LoadFromWAL();
   }
 
-  ~LSMKVStore() override { Shutdown(); }
+  ~LSMKVStore() override { LSMKVStore::Shutdown(); }
 
   bool Set(const Record& record) override {
     std::lock_guard lock(mutex_);
@@ -58,8 +59,8 @@ class LSMKVStore : public IKVStore {
       return record;
     }
 
-    for (auto it = sstables_.rbegin(); it != sstables_.rend(); ++it) {
-      record = it->Get(key);
+    for (auto & sstable : std::ranges::reverse_view(sstables_)) {
+      record = sstable.Get(key);
       if (record) {
         return record;
       }

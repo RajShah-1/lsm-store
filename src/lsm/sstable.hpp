@@ -7,7 +7,6 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 #include "../common/record.hpp"
@@ -18,7 +17,7 @@ class SSTable {
  public:
   using Table = std::map<std::string, Record>;
 
-  SSTable(size_t id, std::filesystem::path data_path,
+  SSTable(const size_t id, std::filesystem::path data_path,
           std::filesystem::path index_path)
       : id_(id),
         data_path_(std::move(data_path)),
@@ -64,7 +63,7 @@ class SSTable {
     std::filesystem::rename(tmp_data_path, data_path);
     std::filesystem::rename(tmp_index_path, index_path);
 
-    return SSTable(id, data_path, index_path);
+    return {id, data_path, index_path};
   }
 
   static std::vector<SSTable> LoadAll(const std::filesystem::path& dir) {
@@ -86,10 +85,10 @@ class SSTable {
       }
     }
 
-    std::sort(tables.begin(), tables.end(),
-              [](const SSTable& lhs, const SSTable& rhs) {
-                return lhs.Id() < rhs.Id();
-              });
+    std::ranges::sort(tables,
+                      [](const SSTable& lhs, const SSTable& rhs) {
+                        return lhs.Id() < rhs.Id();
+                      });
     return tables;
   }
 

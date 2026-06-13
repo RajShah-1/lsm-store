@@ -17,7 +17,7 @@ namespace kvstore {
 class WriteAheadLogger {
  public:
   WriteAheadLogger() {
-    auto& config = KVConfig::Instance();
+    const auto& config = KVConfig::Instance();
     const auto wal_dir = config.GetWalDir();
 
     std::filesystem::create_directories(wal_dir);
